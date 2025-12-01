@@ -92,7 +92,6 @@ pm2 stop cloudspace
 .
 ├── server.js              # 主服务器文件
 ├── database.js            # 数据库初始化
-├── migrate.js             # 数据库迁移
 ├── routes/
 │   ├── auth.js           # 认证路由
 │   ├── files.js          # 文件管理路由

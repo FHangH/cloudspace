@@ -255,11 +255,19 @@ window.copyLink = async (id) => {
         const data = await res.json();
 
         if (res.ok) {
-            navigator.clipboard.writeText(data.shareUrl).then(() => showToast('Public link copied to clipboard'));
+            try {
+                await navigator.clipboard.writeText(data.shareUrl);
+                showToast('Public link copied to clipboard');
+            } catch (clipboardErr) {
+                // Fallback if clipboard API fails
+                console.error('Clipboard error:', clipboardErr);
+                showToast(`Share URL: ${data.shareUrl}`);
+            }
         } else {
             showToast(data.error || 'Failed to generate share link');
         }
     } catch (err) {
+        console.error('Share error:', err);
         showToast('Error generating share link');
     }
 };
@@ -833,11 +841,18 @@ window.copyAdminLink = async (id) => {
         const data = await res.json();
 
         if (res.ok) {
-            navigator.clipboard.writeText(data.shareUrl).then(() => showToast('Public link copied to clipboard'));
+            try {
+                await navigator.clipboard.writeText(data.shareUrl);
+                showToast('Public link copied to clipboard');
+            } catch (clipboardErr) {
+                console.error('Clipboard error:', clipboardErr);
+                showToast(`Share URL: ${data.shareUrl}`);
+            }
         } else {
             showToast(data.error || 'Failed to generate share link');
         }
     } catch (err) {
+        console.error('Share error:', err);
         showToast('Error generating share link');
     }
 };

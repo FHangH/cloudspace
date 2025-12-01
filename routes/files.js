@@ -14,7 +14,7 @@ const storage = multer.diskStorage({
         else if (mimeType.startsWith('video/')) category = 'videos';
         else if (mimeType.startsWith('audio/')) category = 'audio';
 
-        const uploadPath = path.join('uploads', username, category);
+        const uploadPath = path.join(__dirname, '..', 'uploads', username, category);
         fs.mkdirSync(uploadPath, { recursive: true });
         cb(null, uploadPath);
     },
