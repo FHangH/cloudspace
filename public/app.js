@@ -255,20 +255,44 @@ window.copyLink = async (id) => {
         const data = await res.json();
 
         if (res.ok) {
+            // 尝试使用现代剪贴板 API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(data.shareUrl);
+                    showToast('分享链接已复制到剪贴板');
+                    return;
+                } catch (clipboardErr) {
+                    console.warn('现代剪贴板 API 失败，使用备用方案:', clipboardErr);
+                }
+            }
+
+            // 备用方案：使用传统的 execCommand 方法
+            const textarea = document.createElement('textarea');
+            textarea.value = data.shareUrl;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
             try {
-                await navigator.clipboard.writeText(data.shareUrl);
-                showToast('Public link copied to clipboard');
-            } catch (clipboardErr) {
-                // Fallback if clipboard API fails
-                console.error('Clipboard error:', clipboardErr);
-                showToast(`Share URL: ${data.shareUrl}`);
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('分享链接已复制到剪贴板');
+                } else {
+                    showToast(`分享链接: ${data.shareUrl}`);
+                }
+            } catch (execErr) {
+                console.error('execCommand 复制失败:', execErr);
+                showToast(`分享链接: ${data.shareUrl}`);
+            } finally {
+                document.body.removeChild(textarea);
             }
         } else {
-            showToast(data.error || 'Failed to generate share link');
+            showToast(data.error || '生成分享链接失败');
         }
     } catch (err) {
-        console.error('Share error:', err);
-        showToast('Error generating share link');
+        console.error('分享错误:', err);
+        showToast('生成分享链接时出错');
     }
 };
 
@@ -841,19 +865,44 @@ window.copyAdminLink = async (id) => {
         const data = await res.json();
 
         if (res.ok) {
+            // 尝试使用现代剪贴板 API
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                try {
+                    await navigator.clipboard.writeText(data.shareUrl);
+                    showToast('分享链接已复制到剪贴板');
+                    return;
+                } catch (clipboardErr) {
+                    console.warn('现代剪贴板 API 失败，使用备用方案:', clipboardErr);
+                }
+            }
+
+            // 备用方案：使用传统的 execCommand 方法
+            const textarea = document.createElement('textarea');
+            textarea.value = data.shareUrl;
+            textarea.style.position = 'fixed';
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+
             try {
-                await navigator.clipboard.writeText(data.shareUrl);
-                showToast('Public link copied to clipboard');
-            } catch (clipboardErr) {
-                console.error('Clipboard error:', clipboardErr);
-                showToast(`Share URL: ${data.shareUrl}`);
+                const successful = document.execCommand('copy');
+                if (successful) {
+                    showToast('分享链接已复制到剪贴板');
+                } else {
+                    showToast(`分享链接: ${data.shareUrl}`);
+                }
+            } catch (execErr) {
+                console.error('execCommand 复制失败:', execErr);
+                showToast(`分享链接: ${data.shareUrl}`);
+            } finally {
+                document.body.removeChild(textarea);
             }
         } else {
-            showToast(data.error || 'Failed to generate share link');
+            showToast(data.error || '生成分享链接失败');
         }
     } catch (err) {
-        console.error('Share error:', err);
-        showToast('Error generating share link');
+        console.error('分享错误:', err);
+        showToast('生成分享链接时出错');
     }
 };
 
