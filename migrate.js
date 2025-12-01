@@ -1,56 +1,45 @@
 const sqlite3 = require('sqlite3').verbose();
-const bcrypt = require('bcrypt');
 const path = require('path');
 
 const dbPath = path.resolve(__dirname, 'database.sqlite');
-const db = new sqlite3.Database(dbPath);
 
-console.log('Starting database migration...');
+console.log('Running database migration...');
+
+const db = new sqlite3.Database(dbPath, (err) => {
+    if (err) {
+        console.error('Error opening database:', err);
+        process.exit(1);
+    }
+    console.log('Connected to database');
+});
 
 db.serialize(() => {
-    // Add is_admin column if it doesn't exist
-    db.run(`ALTER TABLE users ADD COLUMN is_admin BOOLEAN DEFAULT 0`, (err) => {
-        if (err && !err.message.includes('duplicate column')) {
-            console.error('Error adding is_admin column:', err);
-        } else {
-            console.log('✓ Added is_admin column');
+    // Check if share_tokens table exists
+    db.get("SELECT name FROM sqlite_master WHERE type='table' AND name='share_tokens'", (err, row) => {
+        if (err) {
+            console.error('Error checking table:', err);
+            process.exit(1);
         }
-    });
 
-    // Add is_banned column if it doesn't exist
-    db.run(`ALTER TABLE users ADD COLUMN is_banned BOOLEAN DEFAULT 0`, (err) => {
-        if (err && !err.message.includes('duplicate column')) {
-            console.error('Error adding is_banned column:', err);
-        } else {
-            console.log('✓ Added is_banned column');
-        }
-    });
-
-    // Wait a bit for columns to be added, then create root admin
-    setTimeout(() => {
-        const rootPassword = bcrypt.hashSync('root', 10);
-        db.run(`INSERT OR IGNORE INTO users (username, password, is_admin) VALUES (?, ?, ?)`,
-            ['root', rootPassword, 1],
-            (err) => {
-                if (err && !err.message.includes('UNIQUE constraint')) {
-                    console.error('Error creating root admin:', err);
-                } else if (!err) {
-                    console.log('✓ Created root admin account (root/root)');
-                } else {
-                    // Root already exists, update to make sure it's admin
-                    db.run(`UPDATE users SET is_admin = 1 WHERE username = 'root'`, (err) => {
-                        if (err) {
-                            console.error('Error updating root admin:', err);
-                        } else {
-                            console.log('✓ Updated existing root account to admin');
-                        }
-                    });
+        if (!row) {
+            console.log('Creating share_tokens table...');
+            db.run(`CREATE TABLE share_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                file_id INTEGER NOT NULL,
+                token TEXT UNIQUE NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (file_id) REFERENCES files (id) ON DELETE CASCADE
+            )`, (err) => {
+                if (err) {
+                    console.error('Error creating table:', err);
+                    process.exit(1);
                 }
-
-                console.log('\nMigration complete! You can now restart the server.');
+                console.log('✅ share_tokens table created successfully');
                 db.close();
-                process.exit(0);
-            }
-        );
-    }, 500);
+            });
+        } else {
+            console.log('✅ share_tokens table already exists');
+            db.close();
+        }
+    });
 });
