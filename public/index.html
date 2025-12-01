@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CloudSpace - Personal File Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+
+<body>
+    <div id="auth-screen">
+        <div class="auth-container">
+            <h2 id="auth-title">Welcome Back</h2>
+            <form id="auth-form">
+                <div class="form-group">
+                    <label>Username</label>
+                    <input type="text" id="username" required placeholder="Enter your username">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="password" required placeholder="Enter your password">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%">Login</button>
+            </form>
+            <div class="auth-switch">
+                <span id="auth-switch-text">Don't have an account?</span>
+                <a id="auth-switch-btn">Register</a>
+            </div>
+        </div>
+    </div>
+    <div id="dashboard-screen" class="hidden">
+        <header>
+            <div class="logo"><i class="fa-solid fa-cloud"></i> CloudSpace</div>
+            <nav id="main-nav" style="display: flex; gap: 1rem; align-items: center;">
+                <button id="files-nav-btn" class="btn btn-ghost active"><i class="fa-solid fa-folder"></i> My
+                    Files</button>
+                <button id="admin-nav-btn" class="btn btn-ghost hidden"><i class="fa-solid fa-user-shield"></i> Admin
+                    Panel</button>
+            </nav>
+            <div class="user-info">
+                <span id="user-display-name">User</span>
+                <button id="change-password-btn" class="btn btn-ghost"><i class="fa-solid fa-key"></i> Change
+                    Password</button>
+                <button id="logout-btn" class="btn btn-ghost"><i class="fa-solid fa-right-from-bracket"></i>
+                    Logout</button>
+            </div>
+        </header>
+        <main class="main-content">
+            <div id="files-view">
+                <div class="upload-area" id="drop-zone">
+                    <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
+                    <h3>Drag & Drop files here</h3>
+                    <p style="color: var(--text-secondary); margin: 10px 0;">or</p>
+                    <button class="btn btn-primary" onclick="document.getElementById('file-input').click()">Browse
+                        Files</button>
+                    <input type="file" id="file-input" hidden multiple>
+                </div>
+                <div class="filters">
+                    <button class="filter-btn active" data-category="all">All Files</button>
+                    <button class="filter-btn" data-category="document"><i class="fa-solid fa-file-lines"></i>
+                        Documents</button>
+                    <button class="filter-btn" data-category="image"><i class="fa-solid fa-image"></i> Images</button>
+                    <button class="filter-btn" data-category="video"><i class="fa-solid fa-video"></i> Videos</button>
+                    <button class="filter-btn" data-category="audio"><i class="fa-solid fa-music"></i> Audio</button>
+                </div>
+                <div class="file-grid" id="file-list"></div>
+            </div>
+            <div id="admin-panel" class="hidden">
+                <h2 style="margin-bottom: 2rem;">User Management</h2>
+                <div id="users-list"></div>
+            </div>
+        </main>
+    </div>
+    <div id="preview-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+    <div id="toast" class="toast">Notification message</div>
+    <script src="preview-helper.js"></script>
+    <script src="app.js"></script>
+</body>
+
+</html>
