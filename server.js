@@ -10,7 +10,8 @@ const fileRoutes = require('./routes/files');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
-const PORT = process.env.PORT || 7529;
+const PORT = 7529;
+const HOST = '0.0.0.0';
 
 // Middleware
 app.use(cors());
@@ -45,6 +46,6 @@ app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/admin', adminRoutes);
 
-app.listen(PORT, () => {
-    console.log(`Server running on http://127.0.0.1:${PORT}`);
+app.listen(PORT, HOST, () => {
+    console.log(`Server running on http://${HOST}:${PORT}`);
 });
