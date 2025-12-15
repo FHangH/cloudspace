@@ -8,6 +8,7 @@ const db = require('./database'); // Ensure DB is initialized
 const authRoutes = require('./routes/auth');
 const fileRoutes = require('./routes/files');
 const adminRoutes = require('./routes/admin');
+const notesRoutes = require('./routes/notes');
 
 const app = express();
 const PORT = 7529;
@@ -45,6 +46,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/files', fileRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/notes', notesRoutes);
 
 app.listen(PORT, HOST, () => {
     console.log(`Server running on http://${HOST}:${PORT}`);

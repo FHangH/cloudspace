@@ -38,6 +38,7 @@
         <header>
             <div class="logo"><i class="fa-solid fa-cloud"></i> CloudSpace</div>
             <nav id="main-nav" style="display: flex; gap: 1rem; align-items: center;">
+                <button id="notes-nav-btn" class="btn btn-ghost"><i class="fa-solid fa-note-sticky"></i> Notes</button>
                 <button id="files-nav-btn" class="btn btn-ghost active"><i class="fa-solid fa-folder"></i> My
                     Files</button>
                 <button id="admin-nav-btn" class="btn btn-ghost hidden"><i class="fa-solid fa-user-shield"></i> Admin
@@ -52,6 +53,16 @@
             </div>
         </header>
         <main class="main-content">
+            <div id="notes-view" class="hidden">
+                <div class="notes-header">
+                    <h2>My Notes</h2>
+                    <div class="notes-actions">
+                        <input type="text" id="notes-search" placeholder="搜索笔记标题..." />
+                        <button id="add-note-btn" class="btn btn-primary"><i class="fa-solid fa-plus"></i> 新建笔记</button>
+                    </div>
+                </div>
+                <div id="notes-list"></div>
+            </div>
             <div id="files-view">
                 <div class="upload-area" id="drop-zone">
                     <div class="upload-icon"><i class="fa-solid fa-cloud-arrow-up"></i></div>
@@ -81,6 +92,26 @@
         <div class="modal-content">
             <span class="modal-close" onclick="closeModal()">&times;</span>
             <div id="modal-body"></div>
+        </div>
+    </div>
+    <div id="note-modal" class="modal hidden">
+        <div class="modal-content note-modal-content">
+            <span class="modal-close" onclick="closeNoteModal()">&times;</span>
+            <h2 id="note-modal-title">新建笔记</h2>
+            <form id="note-form">
+                <div class="form-group">
+                    <label>标题</label>
+                    <input type="text" id="note-title" required placeholder="输入笔记标题" />
+                </div>
+                <div class="form-group">
+                    <label>内容</label>
+                    <textarea id="note-content" rows="20" required placeholder="输入笔记内容"></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">保存</button>
+                    <button type="button" class="btn btn-ghost" onclick="closeNoteModal()">取消</button>
+                </div>
+            </form>
         </div>
     </div>
     <div id="toast" class="toast">Notification message</div>

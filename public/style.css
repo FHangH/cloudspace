@@ -534,3 +534,135 @@ header
     background: rgba(59, 130, 246, 0.2);
     color: var(--accent-color);
 }
+/* ========== NOTES VIEW ========== */
+
+#notes-view {
+    width: 100%;
+}
+
+.notes-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.notes-header h2 {
+    margin: 0;
+}
+
+.notes-actions {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+}
+
+#notes-search {
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: var(--glass-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    width: 300px;
+    outline: none;
+    transition: var(--transition);
+}
+
+#notes-search:focus {
+    border-color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+#notes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.note-card {
+    background: var(--card-bg);
+    border: var(--glass-border);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.note-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+.note-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.note-title {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin: 0;
+    flex: 1;
+}
+
+.note-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.note-preview {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin: 0.5rem 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.note-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-top: 1rem;
+}
+
+.note-modal-content {
+    max-width: 2100px;
+    background: var(--card-bg);
+    padding: 2.5rem;
+    border-radius: var(--radius);
+}
+
+.note-modal-content h2 {
+    margin-bottom: 1.5rem;
+}
+
+#note-content {
+    width: 100%;
+    min-height: 300px;
+    padding: 0.75rem;
+    border-radius: 8px;
+    border: var(--glass-border);
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    font-family: 'Courier New', monospace;
+    resize: vertical;
+    outline: none;
+    transition: var(--transition);
+}
+
+#note-content:focus {
+    border-color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.form-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+    margin-top: 1.5rem;
+}

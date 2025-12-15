@@ -1169,3 +1169,375 @@ document.getElementById('change-password-btn').addEventListener('click', () => {
     });
 });
 
+
+// ========== NOTES FUNCTIONALITY ==========
+
+let currentNoteId = null;
+let isEditMode = false;
+
+// Show Notes View
+function showNotesView() {
+    document.getElementById('notes-view').classList.remove('hidden');
+    document.getElementById('files-view').classList.add('hidden');
+    document.getElementById('admin-panel').classList.add('hidden');
+    loadNotes();
+}
+
+// Load notes
+async function loadNotes(searchQuery = '') {
+    try {
+        const url = searchQuery
+            ? `${API_URL}/notes?search=${encodeURIComponent(searchQuery)}`
+            : `${API_URL}/notes`;
+        const res = await fetch(url);
+        const notes = await res.json();
+        renderNotes(notes);
+    } catch (err) {
+        showToast('Failed to load notes');
+    }
+}
+
+// Render notes list
+function renderNotes(notes) {
+    const notesList = document.getElementById('notes-list');
+    notesList.innerHTML = '';
+
+    if (notes.length === 0) {
+        notesList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); margin-top: 2rem;">No notes found. Create your first note!</p>';
+        return;
+    }
+
+    notes.forEach(note => {
+        const noteCard = document.createElement('div');
+        noteCard.className = 'note-card';
+
+        const preview = note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '');
+        const createdDate = new Date(note.created_at).toLocaleDateString();
+
+        noteCard.innerHTML = `
+            <div class="note-card-header">
+                <h3 class="note-title">${escapeHtml(note.title)}</h3>
+                <div class="note-actions" onclick="event.stopPropagation()">
+                    <button class="btn btn-ghost" style="padding: 0.4rem 0.8rem;" onclick="editNote(${note.id})" title="编辑">
+                        <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button class="btn btn-ghost" style="padding: 0.4rem 0.8rem;" onclick="deleteNote(${note.id})" title="删除">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="note-preview">${escapeHtml(preview)}</div>
+            <div class="note-meta">
+                <span><i class="fa-solid fa-calendar"></i> ${createdDate}</span>
+                <span>${note.content.length} 字符</span>
+            </div>
+        `;
+
+        noteCard.onclick = () => previewNote(note.id, note.title);
+        notesList.appendChild(noteCard);
+    });
+}
+
+// Open note modal for creating new note
+function openNoteModal() {
+    currentNoteId = null;
+    isEditMode = false;
+    document.getElementById('note-modal-title').textContent = '新建笔记';
+    document.getElementById('note-title').value = '';
+    document.getElementById('note-content').value = '';
+    document.getElementById('note-modal').classList.remove('hidden');
+}
+
+// Close note modal
+window.closeNoteModal = () => {
+    document.getElementById('note-modal').classList.add('hidden');
+    currentNoteId = null;
+    isEditMode = false;
+};
+
+// Edit note
+window.editNote = async (id) => {
+    try {
+        const res = await fetch(`${API_URL}/notes/${id}`);
+        const note = await res.json();
+
+        currentNoteId = id;
+        isEditMode = true;
+        document.getElementById('note-modal-title').textContent = '编辑笔记';
+        document.getElementById('note-title').value = note.title;
+        document.getElementById('note-content').value = note.content;
+        document.getElementById('note-modal').classList.remove('hidden');
+    } catch (err) {
+        showToast('Failed to load note');
+    }
+};
+
+// Delete note
+window.deleteNote = async (id) => {
+    if (!confirm('确定要删除这条笔记吗？')) return;
+
+    try {
+        const res = await fetch(`${API_URL}/notes/${id}`, { method: 'DELETE' });
+        if (res.ok) {
+            showToast('笔记已删除');
+            loadNotes();
+        } else {
+            showToast('删除失败');
+        }
+    } catch (err) {
+        showToast('删除失败');
+    }
+};
+
+// Preview note
+async function previewNote(id, title) {
+    try {
+        const res = await fetch(`${API_URL}/notes/${id}`);
+        const note = await res.json();
+
+        const modal = document.getElementById('preview-modal');
+        const body = document.getElementById('modal-body');
+
+        body.innerHTML = `
+            <div style="background: #0d1117; padding: 2rem; border-radius: 12px; max-width: 1400px; max-height: 80vh; overflow-y: auto;">
+                <div style="background: #161b22; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="color: #8b949e; font-size: 0.9rem;"><i class="fa-solid fa-note-sticky"></i> ${escapeHtml(note.title)}</span>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button id="copy-note-btn" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="复制内容">
+                            <i class="fa-solid fa-copy"></i> 复制
+                        </button>
+                        <button id="copy-note-link-btn" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="复制链接">
+                            <i class="fa-solid fa-link"></i> 链接
+                        </button>
+                        <button id="download-note-btn" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="下载">
+                            <i class="fa-solid fa-download"></i> 下载
+                        </button>
+                        <button id="toggle-note-wrap-btn" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="切换换行">
+                            <i class="fa-solid fa-arrows-left-right"></i> 换行
+                        </button>
+                        <button id="edit-note-preview-btn" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="编辑">
+                            <i class="fa-solid fa-edit"></i> 编辑
+                        </button>
+                    </div>
+                </div>
+                <pre id="note-preview-pre" style="white-space: pre-wrap; overflow-x: auto; color: #c9d1d9; background: #0d1117; padding: 1rem; border-radius: 8px; margin: 0;">${escapeHtml(note.content)}</pre>
+            </div>
+        `;
+
+        // Copy content button
+        const copyBtn = document.getElementById('copy-note-btn');
+        copyBtn.addEventListener('click', async () => {
+            try {
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    await navigator.clipboard.writeText(note.content);
+                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                    }, 2000);
+                    showToast('内容已复制到剪贴板');
+                } else {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = note.content;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                    }, 2000);
+                    showToast('内容已复制到剪贴板');
+                }
+            } catch (err) {
+                showToast('复制失败');
+            }
+        });
+
+        // Copy link button
+        const copyLinkBtn = document.getElementById('copy-note-link-btn');
+        copyLinkBtn.addEventListener('click', async () => {
+            try {
+                const shareRes = await fetch(`${API_URL}/notes/${id}/share`, { method: 'POST' });
+                const shareData = await shareRes.json();
+
+                if (shareRes.ok) {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(shareData.shareUrl);
+                    } else {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = shareData.shareUrl;
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                    }
+                    copyLinkBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                    setTimeout(() => {
+                        copyLinkBtn.innerHTML = '<i class="fa-solid fa-link"></i> 链接';
+                    }, 2000);
+                    showToast('分享链接已复制');
+                } else {
+                    showToast('生成分享链接失败');
+                }
+            } catch (err) {
+                showToast('生成分享链接失败');
+            }
+        });
+
+        // Download button
+        const downloadBtn = document.getElementById('download-note-btn');
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([note.content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${note.title}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('笔记已下载');
+        });
+
+        // Toggle wrap button
+        const toggleWrapBtn = document.getElementById('toggle-note-wrap-btn');
+        const preElement = document.getElementById('note-preview-pre');
+        let isWrapped = true;
+        toggleWrapBtn.addEventListener('click', () => {
+            isWrapped = !isWrapped;
+            if (isWrapped) {
+                preElement.style.whiteSpace = 'pre-wrap';
+                preElement.style.overflowX = 'visible';
+                toggleWrapBtn.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> 不换行';
+            } else {
+                preElement.style.whiteSpace = 'pre';
+                preElement.style.overflowX = 'auto';
+                toggleWrapBtn.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> 换行';
+            }
+        });
+
+        // Edit button
+        const editBtn = document.getElementById('edit-note-preview-btn');
+        editBtn.addEventListener('click', () => {
+            closeModal();
+            editNote(id);
+        });
+
+        modal.classList.remove('hidden');
+    } catch (err) {
+        showToast('Failed to load note');
+    }
+}
+
+// Setup navigation for notes
+document.addEventListener('DOMContentLoaded', () => {
+    const notesNavBtn = document.getElementById('notes-nav-btn');
+    const filesNavBtn = document.getElementById('files-nav-btn');
+    const adminNavBtn = document.getElementById('admin-nav-btn');
+
+    if (notesNavBtn) {
+        notesNavBtn.addEventListener('click', () => {
+            notesNavBtn.classList.add('active');
+            filesNavBtn.classList.remove('active');
+            adminNavBtn.classList.remove('active');
+            showNotesView();
+        });
+    }
+
+    // Add note button
+    const addNoteBtn = document.getElementById('add-note-btn');
+    if (addNoteBtn) {
+        addNoteBtn.addEventListener('click', openNoteModal);
+    }
+
+    // Search notes
+    const notesSearch = document.getElementById('notes-search');
+    if (notesSearch) {
+        let searchTimeout;
+        notesSearch.addEventListener('input', (e) => {
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(() => {
+                loadNotes(e.target.value);
+            }, 300);
+        });
+    }
+
+    // Note form submission
+    const noteForm = document.getElementById('note-form');
+    if (noteForm) {
+        noteForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const title = document.getElementById('note-title').value;
+            const content = document.getElementById('note-content').value;
+
+            try {
+                let res;
+                if (isEditMode && currentNoteId) {
+                    // Update existing note
+                    res = await fetch(`${API_URL}/notes/${currentNoteId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, content })
+                    });
+                } else {
+                    // Create new note
+                    res = await fetch(`${API_URL}/notes`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ title, content })
+                    });
+                }
+
+                if (res.ok) {
+                    showToast(isEditMode ? '笔记已更新' : '笔记已创建');
+                    closeNoteModal();
+                    loadNotes();
+                } else {
+                    showToast('保存失败');
+                }
+            } catch (err) {
+                showToast('保存失败');
+            }
+        });
+    }
+});
+
+// Update setupNavigation to include notes
+const originalSetupNavigation = setupNavigation;
+setupNavigation = function () {
+    if (originalSetupNavigation) {
+        originalSetupNavigation();
+    }
+
+    const notesNavBtn = document.getElementById('notes-nav-btn');
+    const filesNavBtn = document.getElementById('files-nav-btn');
+    const adminNavBtn = document.getElementById('admin-nav-btn');
+
+    if (notesNavBtn) {
+        notesNavBtn.addEventListener('click', () => {
+            notesNavBtn.classList.add('active');
+            filesNavBtn.classList.remove('active');
+            if (adminNavBtn) adminNavBtn.classList.remove('active');
+            showNotesView();
+        });
+    }
+
+    if (filesNavBtn) {
+        const oldFilesHandler = filesNavBtn.onclick;
+        filesNavBtn.addEventListener('click', () => {
+            if (notesNavBtn) notesNavBtn.classList.remove('active');
+        });
+    }
+
+    if (adminNavBtn) {
+        const oldAdminHandler = adminNavBtn.onclick;
+        adminNavBtn.addEventListener('click', () => {
+            if (notesNavBtn) notesNavBtn.classList.remove('active');
+        });
+    }
+};
