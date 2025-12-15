@@ -764,6 +764,9 @@ function renderUsers(users) {
                     <button class="btn btn-ghost" onclick="viewUserFiles(${user.id}, '${user.username}')">
                         <i class="fa-solid fa-folder"></i> View Files
                     </button>
+                    <button class="btn btn-ghost" onclick="viewUserNotes(${user.id}, '${user.username}')">
+                        <i class="fa-solid fa-note-sticky"></i> View Notes
+                    </button>
                     <button class="btn btn-danger" onclick="deleteUser(${user.id}, '${user.username}')">
                         <i class="fa-solid fa-trash"></i> Delete
                     </button>
@@ -1180,6 +1183,13 @@ function showNotesView() {
     document.getElementById('notes-view').classList.remove('hidden');
     document.getElementById('files-view').classList.add('hidden');
     document.getElementById('admin-panel').classList.add('hidden');
+
+    // Reset UI to My Notes
+    const header = document.querySelector('#notes-view h2');
+    if (header) header.textContent = 'My Notes';
+    const addNoteBtn = document.getElementById('add-note-btn');
+    if (addNoteBtn) addNoteBtn.classList.remove('hidden');
+
     loadNotes();
 }
 
@@ -1198,8 +1208,10 @@ async function loadNotes(searchQuery = '') {
 }
 
 // Render notes list
-function renderNotes(notes) {
-    const notesList = document.getElementById('notes-list');
+// Render notes list
+function renderNotes(notes, isReadOnly = false, containerId = 'notes-list', isAdminView = false) {
+    const notesList = document.getElementById(containerId);
+    if (!notesList) return;
     notesList.innerHTML = '';
 
     if (notes.length === 0) {
@@ -1208,32 +1220,62 @@ function renderNotes(notes) {
     }
 
     notes.forEach(note => {
+        if (typeof renderedNotesMap !== 'undefined') renderedNotesMap[note.id] = note;
         const noteCard = document.createElement('div');
-        noteCard.className = 'note-card';
 
-        const preview = note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '');
-        const createdDate = new Date(note.created_at).toLocaleDateString();
-
-        noteCard.innerHTML = `
-            <div class="note-card-header">
-                <h3 class="note-title">${escapeHtml(note.title)}</h3>
+        if (isAdminView) {
+            noteCard.className = 'admin-note-item';
+            noteCard.innerHTML = `
+                <div class="note-info">
+                    <span class="note-title">${escapeHtml(note.title)}</span>
+                    <span class="note-snippet">${escapeHtml(note.content.substring(0, 50))}...</span>
+                </div>
                 <div class="note-actions" onclick="event.stopPropagation()">
-                    <button class="btn btn-ghost" style="padding: 0.4rem 0.8rem;" onclick="editNote(${note.id})" title="编辑">
-                        <i class="fa-solid fa-edit"></i>
+                    <button class="btn btn-ghost" onclick="handleNoteAction('copy', ${note.id}, this)" title="复制">
+                        <i class="fa-solid fa-copy"></i>
                     </button>
-                    <button class="btn btn-ghost" style="padding: 0.4rem 0.8rem;" onclick="deleteNote(${note.id})" title="删除">
-                        <i class="fa-solid fa-trash"></i>
+                    <button class="btn btn-ghost" onclick="handleNoteAction('link', ${note.id}, this)" title="链接">
+                        <i class="fa-solid fa-link"></i>
+                    </button>
+                    <button class="btn btn-ghost" onclick="handleNoteAction('download', ${note.id}, this)" title="下载">
+                        <i class="fa-solid fa-download"></i>
                     </button>
                 </div>
-            </div>
-            <div class="note-preview">${escapeHtml(preview)}</div>
-            <div class="note-meta">
-                <span><i class="fa-solid fa-calendar"></i> ${createdDate}</span>
-                <span>${note.content.length} 字符</span>
-            </div>
-        `;
+            `;
+        } else {
+            noteCard.className = 'note-card';
+            const preview = note.content.substring(0, 100) + (note.content.length > 100 ? '...' : '');
+            const createdDate = new Date(note.created_at).toLocaleDateString();
 
-        noteCard.onclick = () => previewNote(note.id, note.title);
+            noteCard.innerHTML = `
+                <div class="note-card-header">
+                    <h3 class="note-title">${escapeHtml(note.title)}</h3>
+                    ${isReadOnly ? '' : `
+                    <div class="note-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-ghost" style="padding: 0.4rem 0.8rem;" onclick="editNote(${note.id})" title="编辑">
+                            <i class="fa-solid fa-edit"></i>
+                        </button>
+                        <button class="btn btn-ghost" style="padding: 0.4rem 0.8rem;" onclick="deleteNote(${note.id})" title="删除">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                    `}
+                </div>
+                <div class="note-preview">${escapeHtml(preview)}</div>
+                <div class="note-meta">
+                    <span><i class="fa-solid fa-calendar"></i> ${createdDate}</span>
+                    <span>${note.content.length} 字符</span>
+                </div>
+            `;
+        }
+
+        noteCard.onclick = () => {
+            if (isReadOnly) {
+                previewAdminNote(note.id);
+            } else {
+                previewNote(note.id, note.title);
+            }
+        };
         notesList.appendChild(noteCard);
     });
 }
@@ -1507,6 +1549,162 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
+// View User Notes (Admin)
+window.viewUserNotes = async (userId, username) => {
+    try {
+        const res = await fetch(`${API_URL}/admin/users/${userId}/notes`);
+        const notes = await res.json();
+
+        const modal = document.getElementById('admin-notes-modal');
+        const title = document.getElementById('admin-notes-title');
+
+        title.textContent = `Notes of ${username}`;
+        renderNotes(notes, true, 'admin-notes-list', true);
+
+        modal.classList.remove('hidden');
+    } catch (err) {
+        showToast('Failed to load user notes');
+    }
+};
+
+window.closeAdminNotesModal = () => {
+    document.getElementById('admin-notes-modal').classList.add('hidden');
+};
+
+// Preview admin note
+async function previewAdminNote(id) {
+    try {
+        const res = await fetch(`${API_URL}/admin/notes/${id}`);
+        const note = await res.json();
+
+        const modal = document.getElementById('preview-modal');
+        const body = document.getElementById('modal-body');
+
+        body.innerHTML = `
+            <div class="note-preview-modal">
+                <div class="note-preview-header">
+                    <h3>${escapeHtml(note.title)} <span style="font-size: 0.8em; background: var(--primary-color); padding: 2px 6px; border-radius: 4px; margin-left: 8px;">Read Only</span></h3>
+                    <div class="note-preview-actions">
+                        <button class="btn btn-ghost" id="copy-note-content-btn"><i class="fa-solid fa-copy"></i> 复制</button>
+                        <button class="btn btn-ghost" id="download-note-btn"><i class="fa-solid fa-download"></i> 下载</button>
+                        <button class="btn btn-ghost" id="toggle-note-wrap-btn"><i class="fa-solid fa-arrows-left-right"></i> 换行</button>
+                    </div>
+                </div>
+                <pre id="note-preview-pre">${escapeHtml(note.content)}</pre>
+            </div>
+        `;
+
+        // Copy content button
+        const copyBtn = document.getElementById('copy-note-content-btn');
+        copyBtn.addEventListener('click', async () => {
+            try {
+                await navigator.clipboard.writeText(note.content);
+                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                }, 2000);
+                showToast('内容已复制到剪贴板');
+            } catch (err) {
+                showToast('复制失败');
+            }
+        });
+
+        // Download button
+        const downloadBtn = document.getElementById('download-note-btn');
+        downloadBtn.addEventListener('click', () => {
+            const blob = new Blob([note.content], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${note.title}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('笔记已下载');
+        });
+
+        // Toggle wrap button
+        const toggleWrapBtn = document.getElementById('toggle-note-wrap-btn');
+        const preElement = document.getElementById('note-preview-pre');
+        let isWrapped = true;
+        toggleWrapBtn.addEventListener('click', () => {
+            isWrapped = !isWrapped;
+            if (isWrapped) {
+                preElement.style.whiteSpace = 'pre-wrap';
+                preElement.style.overflowX = 'visible';
+                toggleWrapBtn.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> 不换行';
+            } else {
+                preElement.style.whiteSpace = 'pre';
+                preElement.style.overflowX = 'auto';
+                toggleWrapBtn.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> 换行';
+            }
+        });
+
+        modal.classList.remove('hidden');
+    } catch (err) {
+        showToast('Failed to load note');
+    }
+}
+
+// Helper functions for note actions
+let renderedNotesMap = {};
+
+window.handleNoteAction = (action, id, btn) => {
+    const note = renderedNotesMap[id];
+    if (!note) return;
+
+    if (action === 'copy') copyNoteContent(note.content, btn);
+    else if (action === 'link') copyNoteLink(id, btn);
+    else if (action === 'download') downloadNote(note.title, note.content);
+};
+
+window.copyNoteContent = async (content, btn) => {
+    try {
+        await navigator.clipboard.writeText(content);
+        const originalHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+        setTimeout(() => {
+            btn.innerHTML = originalHtml;
+        }, 2000);
+        showToast('内容已复制');
+    } catch (err) {
+        showToast('复制失败');
+    }
+};
+
+window.downloadNote = (title, content) => {
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${title}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+};
+
+window.copyNoteLink = async (id, btn) => {
+    try {
+        const res = await fetch(`${API_URL}/notes/${id}/share`, { method: 'POST' });
+        const data = await res.json();
+        if (data.shareUrl) {
+            await navigator.clipboard.writeText(data.shareUrl);
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+            setTimeout(() => {
+                btn.innerHTML = originalHtml;
+            }, 2000);
+            showToast('链接已复制');
+        } else {
+            showToast('获取链接失败');
+        }
+    } catch (err) {
+        showToast('获取链接失败');
+    }
+};
+
 // Update setupNavigation to include notes
 const originalSetupNavigation = setupNavigation;
 setupNavigation = function () {
@@ -1531,6 +1729,7 @@ setupNavigation = function () {
         const oldFilesHandler = filesNavBtn.onclick;
         filesNavBtn.addEventListener('click', () => {
             if (notesNavBtn) notesNavBtn.classList.remove('active');
+            document.getElementById('notes-view').classList.add('hidden');
         });
     }
 
@@ -1538,6 +1737,7 @@ setupNavigation = function () {
         const oldAdminHandler = adminNavBtn.onclick;
         adminNavBtn.addEventListener('click', () => {
             if (notesNavBtn) notesNavBtn.classList.remove('active');
+            document.getElementById('notes-view').classList.add('hidden');
         });
     }
 };

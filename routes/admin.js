@@ -89,6 +89,24 @@ router.get('/users/:id/files', requireAdmin, (req, res) => {
     });
 });
 
+// Get user's notes
+router.get('/users/:id/notes', requireAdmin, (req, res) => {
+    const userId = req.params.id;
+    db.all('SELECT * FROM notes WHERE user_id = ? ORDER BY created_at DESC', [userId], (err, rows) => {
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows);
+    });
+});
+
+// Get single note (admin)
+router.get('/notes/:id', requireAdmin, (req, res) => {
+    db.get('SELECT * FROM notes WHERE id = ?', [req.params.id], (err, note) => {
+        if (err) return res.status(500).json({ error: err.message });
+        if (!note) return res.status(404).json({ error: 'Note not found' });
+        res.json(note);
+    });
+});
+
 // Download file content (admin can access any file)
 router.get('/files/:id/content', requireAdmin, (req, res) => {
     const fileId = req.params.id;

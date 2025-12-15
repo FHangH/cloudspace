@@ -108,8 +108,17 @@ router.delete('/:id', requireAuth, (req, res) => {
 router.post('/:id/share', requireAuth, (req, res) => {
     const noteId = req.params.id;
     const userId = req.session.userId;
+    const isAdmin = req.session.isAdmin;
 
-    db.get('SELECT * FROM notes WHERE id = ? AND user_id = ?', [noteId, userId], (err, note) => {
+    let query = 'SELECT * FROM notes WHERE id = ?';
+    let params = [noteId];
+
+    if (!isAdmin) {
+        query += ' AND user_id = ?';
+        params.push(userId);
+    }
+
+    db.get(query, params, (err, note) => {
         if (err) return res.status(500).json({ error: err.message });
         if (!note) return res.status(404).json({ error: 'Note not found' });
 

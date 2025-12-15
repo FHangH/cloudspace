@@ -534,30 +534,36 @@ header
     background: rgba(59, 130, 246, 0.2);
     color: var(--accent-color);
 }
+
 /* ========== NOTES VIEW ========== */
 
-#notes-view {
+#notes-view
+{
     width: 100%;
 }
 
-.notes-header {
+.notes-header
+{
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
 }
 
-.notes-header h2 {
+.notes-header h2
+{
     margin: 0;
 }
 
-.notes-actions {
+.notes-actions
+{
     display: flex;
     gap: 1rem;
     align-items: center;
 }
 
-#notes-search {
+#notes-search
+{
     padding: 0.5rem 1rem;
     border-radius: 8px;
     border: var(--glass-border);
@@ -568,18 +574,21 @@ header
     transition: var(--transition);
 }
 
-#notes-search:focus {
+#notes-search:focus
+{
     border-color: var(--accent-color);
     background: rgba(255, 255, 255, 0.08);
 }
 
-#notes-list {
+#notes-list
+{
     display: flex;
     flex-direction: column;
     gap: 1rem;
 }
 
-.note-card {
+.note-card
+{
     background: var(--card-bg);
     border: var(--glass-border);
     border-radius: var(--radius);
@@ -588,31 +597,36 @@ header
     cursor: pointer;
 }
 
-.note-card:hover {
+.note-card:hover
+{
     transform: translateY(-2px);
     box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
 }
 
-.note-card-header {
+.note-card-header
+{
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 0.5rem;
 }
 
-.note-title {
+.note-title
+{
     font-size: 1.2rem;
     font-weight: 600;
     margin: 0;
     flex: 1;
 }
 
-.note-actions {
+.note-actions
+{
     display: flex;
     gap: 0.5rem;
 }
 
-.note-preview {
+.note-preview
+{
     color: var(--text-secondary);
     font-size: 0.9rem;
     margin: 0.5rem 0;
@@ -621,7 +635,8 @@ header
     white-space: nowrap;
 }
 
-.note-meta {
+.note-meta
+{
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -630,18 +645,21 @@ header
     margin-top: 1rem;
 }
 
-.note-modal-content {
+.note-modal-content
+{
     max-width: 2100px;
     background: var(--card-bg);
     padding: 2.5rem;
     border-radius: var(--radius);
 }
 
-.note-modal-content h2 {
+.note-modal-content h2
+{
     margin-bottom: 1.5rem;
 }
 
-#note-content {
+#note-content
+{
     width: 100%;
     min-height: 300px;
     padding: 0.75rem;
@@ -655,14 +673,96 @@ header
     transition: var(--transition);
 }
 
-#note-content:focus {
+#note-content:focus
+{
     border-color: var(--accent-color);
     background: rgba(255, 255, 255, 0.08);
 }
 
-.form-actions {
+.form-actions
+{
     display: flex;
     gap: 1rem;
     justify-content: flex-end;
     margin-top: 1.5rem;
+}
+
+
+/* Fix for Admin Notes Preview Z-Index */
+#preview-modal
+{
+    z-index: 2100;
+}
+
+/* Fix for New Note Modal Width */
+.note-modal-content
+{
+    width: 50vw !important;
+    max-width: 800px !important;
+}
+
+/* Admin Notes List Layout */
+#admin-notes-list
+{
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+}
+
+/* Admin Note Item (List View) */
+.admin-note-item
+{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem;
+    background: var(--card-bg);
+    border: var(--glass-border);
+    border-radius: var(--radius);
+    margin-bottom: 0.5rem;
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.admin-note-item:hover
+{
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.note-info
+{
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    overflow: hidden;
+}
+
+.note-info .note-title
+{
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.note-info .note-snippet
+{
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ensure actions are visible */
+.admin-note-item .note-actions
+{
+    display: flex;
+    gap: 0.5rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.admin-note-item:hover .note-actions
+{
+    opacity: 1;
 }

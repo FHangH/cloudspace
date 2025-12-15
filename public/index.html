@@ -114,6 +114,15 @@
             </form>
         </div>
     </div>
+    <div id="admin-notes-modal" class="modal hidden">
+        <div class="modal-content note-modal-content">
+            <span class="modal-close" onclick="closeAdminNotesModal()">&times;</span>
+            <h2 id="admin-notes-title">User Notes</h2>
+            <div id="admin-notes-list"
+                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+            </div>
+        </div>
+    </div>
     <div id="toast" class="toast">Notification message</div>
     <script src="preview-helper.js"></script>
     <script src="app.js"></script>
