@@ -366,16 +366,58 @@ window.previewFile = async (id, category, name) => {
 
                 body.innerHTML = `
                     <div style="background: #0d1117; padding: 2rem; border-radius: 12px; max-width: 1400px; max-height: 80vh; overflow-y: auto;">
-                        <div style="background: #161b22; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <div style="background: #161b22; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
                             <span style="color: #8b949e; font-size: 0.9rem;"><i class="fa-solid fa-file-code"></i> ${name}</span>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button id="copy-text-btn" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="复制文本">
+                                    <i class="fa-solid fa-copy"></i> 复制
+                                </button>
+                                <button id="toggle-wrap-btn" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="切换换行">
+                                    <i class="fa-solid fa-arrows-left-right"></i> 换行
+                                </button>
+                            </div>
                         </div>
-                        <pre><code class="language-${language}">${escapeHtml(text)}</code></pre>
+                        <pre id="code-preview-pre" style="white-space: pre; overflow-x: auto;"><code class="language-${language}">${escapeHtml(text)}</code></pre>
                     </div>
                 `;
 
                 // Apply syntax highlighting
                 document.querySelectorAll('pre code').forEach((block) => {
                     hljs.highlightElement(block);
+                });
+
+                // Store the original text for copying
+                const copyBtn = document.getElementById('copy-text-btn');
+                const toggleWrapBtn = document.getElementById('toggle-wrap-btn');
+                const preElement = document.getElementById('code-preview-pre');
+                let isWrapped = false;
+
+                // Copy text functionality
+                copyBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                        }, 2000);
+                        showToast('文本已复制到剪贴板');
+                    } catch (err) {
+                        showToast('复制失败，请手动复制');
+                    }
+                });
+
+                // Toggle wrap functionality
+                toggleWrapBtn.addEventListener('click', () => {
+                    isWrapped = !isWrapped;
+                    if (isWrapped) {
+                        preElement.style.whiteSpace = 'pre-wrap';
+                        preElement.style.overflowX = 'visible';
+                        toggleWrapBtn.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> 不换行';
+                    } else {
+                        preElement.style.whiteSpace = 'pre';
+                        preElement.style.overflowX = 'auto';
+                        toggleWrapBtn.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> 换行';
+                    }
                 });
             } catch (err) {
                 body.innerHTML = `<p style="color: white;">Failed to load file</p>`;
@@ -797,16 +839,58 @@ window.previewAdminFile = async (id, category, name) => {
 
                 body.innerHTML = `
                     <div style="background: #0d1117; padding: 2rem; border-radius: 12px; max-width: 1400px; max-height: 80vh; overflow-y: auto;">
-                        <div style="background: #161b22; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                        <div style="background: #161b22; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center;">
                             <span style="color: #8b949e; font-size: 0.9rem;"><i class="fa-solid fa-file-code"></i> ${name}</span>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button id="copy-text-btn-admin" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="复制文本">
+                                    <i class="fa-solid fa-copy"></i> 复制
+                                </button>
+                                <button id="toggle-wrap-btn-admin" class="btn btn-ghost" style="padding: 0.4rem 0.8rem; font-size: 0.85rem;" title="切换换行">
+                                    <i class="fa-solid fa-arrows-left-right"></i> 换行
+                                </button>
+                            </div>
                         </div>
-                        <pre><code class="language-${language}">${escapeHtml(text)}</code></pre>
+                        <pre id="code-preview-pre-admin" style="white-space: pre; overflow-x: auto;"><code class="language-${language}">${escapeHtml(text)}</code></pre>
                     </div>
                 `;
 
                 // Apply syntax highlighting
                 document.querySelectorAll('pre code').forEach((block) => {
                     hljs.highlightElement(block);
+                });
+
+                // Store the original text for copying
+                const copyBtn = document.getElementById('copy-text-btn-admin');
+                const toggleWrapBtn = document.getElementById('toggle-wrap-btn-admin');
+                const preElement = document.getElementById('code-preview-pre-admin');
+                let isWrapped = false;
+
+                // Copy text functionality
+                copyBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                        setTimeout(() => {
+                            copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                        }, 2000);
+                        showToast('文本已复制到剪贴板');
+                    } catch (err) {
+                        showToast('复制失败，请手动复制');
+                    }
+                });
+
+                // Toggle wrap functionality
+                toggleWrapBtn.addEventListener('click', () => {
+                    isWrapped = !isWrapped;
+                    if (isWrapped) {
+                        preElement.style.whiteSpace = 'pre-wrap';
+                        preElement.style.overflowX = 'visible';
+                        toggleWrapBtn.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> 不换行';
+                    } else {
+                        preElement.style.whiteSpace = 'pre';
+                        preElement.style.overflowX = 'auto';
+                        toggleWrapBtn.innerHTML = '<i class="fa-solid fa-arrows-left-right"></i> 换行';
+                    }
                 });
             } catch (err) {
                 body.innerHTML = `<p style="color: white;">Failed to load file</p>`;
