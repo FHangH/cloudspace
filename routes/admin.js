@@ -118,8 +118,16 @@ router.get('/files/:id/view', requireAdmin, (req, res) => {
 
         const absolutePath = path.resolve(file.path);
 
-        // Set headers for inline display
-        res.setHeader('Content-Type', file.mime_type || 'application/octet-stream');
+        // Set Content-Type with UTF-8 charset for text files
+        let contentType = file.mime_type || 'application/octet-stream';
+        if (contentType.startsWith('text/') ||
+            contentType === 'application/javascript' ||
+            contentType === 'application/json' ||
+            contentType === 'application/xml') {
+            contentType += '; charset=utf-8';
+        }
+
+        res.setHeader('Content-Type', contentType);
         res.setHeader('Content-Disposition', 'inline');
 
         res.sendFile(absolutePath);

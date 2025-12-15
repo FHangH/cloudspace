@@ -392,17 +392,72 @@ window.previewFile = async (id, category, name) => {
                 const preElement = document.getElementById('code-preview-pre');
                 let isWrapped = false;
 
-                // Copy text functionality
+                // Copy text functionality with fallback
                 copyBtn.addEventListener('click', async () => {
                     try {
-                        await navigator.clipboard.writeText(text);
-                        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
-                        setTimeout(() => {
-                            copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
-                        }, 2000);
-                        showToast('文本已复制到剪贴板');
+                        // Try modern clipboard API first
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText(text);
+                            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                            setTimeout(() => {
+                                copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                            }, 2000);
+                            showToast('文本已复制到剪贴板');
+                        } else {
+                            // Fallback to execCommand for older browsers or non-HTTPS
+                            const textarea = document.createElement('textarea');
+                            textarea.value = text;
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            textarea.style.top = '0';
+                            textarea.style.left = '0';
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            textarea.setSelectionRange(0, text.length);
+
+                            const successful = document.execCommand('copy');
+                            document.body.removeChild(textarea);
+
+                            if (successful) {
+                                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                                setTimeout(() => {
+                                    copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                                }, 2000);
+                                showToast('文本已复制到剪贴板');
+                            } else {
+                                showToast('复制失败，请手动选择文本复制');
+                            }
+                        }
                     } catch (err) {
-                        showToast('复制失败，请手动复制');
+                        console.error('复制错误:', err);
+                        // Final fallback: try execCommand
+                        try {
+                            const textarea = document.createElement('textarea');
+                            textarea.value = text;
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            textarea.style.top = '0';
+                            textarea.style.left = '0';
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            textarea.setSelectionRange(0, text.length);
+
+                            const successful = document.execCommand('copy');
+                            document.body.removeChild(textarea);
+
+                            if (successful) {
+                                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                                setTimeout(() => {
+                                    copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                                }, 2000);
+                                showToast('文本已复制到剪贴板');
+                            } else {
+                                showToast('复制失败，请手动选择文本复制');
+                            }
+                        } catch (fallbackErr) {
+                            console.error('降级复制也失败:', fallbackErr);
+                            showToast('复制失败，请手动选择文本复制');
+                        }
                     }
                 });
 
@@ -865,17 +920,72 @@ window.previewAdminFile = async (id, category, name) => {
                 const preElement = document.getElementById('code-preview-pre-admin');
                 let isWrapped = false;
 
-                // Copy text functionality
+                // Copy text functionality with fallback
                 copyBtn.addEventListener('click', async () => {
                     try {
-                        await navigator.clipboard.writeText(text);
-                        copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
-                        setTimeout(() => {
-                            copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
-                        }, 2000);
-                        showToast('文本已复制到剪贴板');
+                        // Try modern clipboard API first
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText(text);
+                            copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                            setTimeout(() => {
+                                copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                            }, 2000);
+                            showToast('文本已复制到剪贴板');
+                        } else {
+                            // Fallback to execCommand for older browsers or non-HTTPS
+                            const textarea = document.createElement('textarea');
+                            textarea.value = text;
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            textarea.style.top = '0';
+                            textarea.style.left = '0';
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            textarea.setSelectionRange(0, text.length);
+
+                            const successful = document.execCommand('copy');
+                            document.body.removeChild(textarea);
+
+                            if (successful) {
+                                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                                setTimeout(() => {
+                                    copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                                }, 2000);
+                                showToast('文本已复制到剪贴板');
+                            } else {
+                                showToast('复制失败，请手动选择文本复制');
+                            }
+                        }
                     } catch (err) {
-                        showToast('复制失败，请手动复制');
+                        console.error('复制错误:', err);
+                        // Final fallback: try execCommand
+                        try {
+                            const textarea = document.createElement('textarea');
+                            textarea.value = text;
+                            textarea.style.position = 'fixed';
+                            textarea.style.opacity = '0';
+                            textarea.style.top = '0';
+                            textarea.style.left = '0';
+                            document.body.appendChild(textarea);
+                            textarea.select();
+                            textarea.setSelectionRange(0, text.length);
+
+                            const successful = document.execCommand('copy');
+                            document.body.removeChild(textarea);
+
+                            if (successful) {
+                                copyBtn.innerHTML = '<i class="fa-solid fa-check"></i> 已复制';
+                                setTimeout(() => {
+                                    copyBtn.innerHTML = '<i class="fa-solid fa-copy"></i> 复制';
+                                }, 2000);
+                                showToast('文本已复制到剪贴板');
+                            } else {
+                                showToast('复制失败，请手动选择文本复制');
+                            }
+                        } catch (fallbackErr) {
+                            console.error('降级复制也失败:', fallbackErr);
+                            showToast('复制失败，请手动选择文本复制');
+                        }
                     }
                 });
 
