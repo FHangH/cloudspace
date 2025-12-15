@@ -1659,9 +1659,31 @@ window.handleNoteAction = (action, id, btn) => {
     else if (action === 'download') downloadNote(note.title, note.content);
 };
 
+window.copyToClipboard = async (text) => {
+    if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(text);
+    } else {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        try {
+            document.execCommand('copy');
+        } catch (err) {
+            console.error('Fallback copy failed', err);
+            throw err;
+        } finally {
+            document.body.removeChild(textArea);
+        }
+    }
+};
+
 window.copyNoteContent = async (content, btn) => {
     try {
-        await navigator.clipboard.writeText(content);
+        await copyToClipboard(content);
         const originalHtml = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-check"></i>';
         setTimeout(() => {
@@ -1690,7 +1712,7 @@ window.copyNoteLink = async (id, btn) => {
         const res = await fetch(`${API_URL}/notes/${id}/share`, { method: 'POST' });
         const data = await res.json();
         if (data.shareUrl) {
-            await navigator.clipboard.writeText(data.shareUrl);
+            await copyToClipboard(data.shareUrl);
             const originalHtml = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-check"></i>';
             setTimeout(() => {

@@ -435,7 +435,7 @@ header
     color: white;
     transform: translateY(100px);
     transition: var(--transition);
-    z-index: 2000;
+    z-index: 3000;
 }
 
 .toast.show
