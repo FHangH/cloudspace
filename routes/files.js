@@ -94,22 +94,18 @@ router.get('/:id/content', requireAuth, (req, res) => {
 
 router.get('/:id/view', (req, res) => {
     const fileId = req.params.id;
-    const token = req.query.token;
 
-    if (token) {
-        db.get('SELECT file_id FROM share_tokens WHERE token = ?', [token], (err, shareToken) => {
-            if (err) return res.status(500).json({ error: err.message });
-            if (!shareToken || shareToken.file_id != fileId) {
-                return res.status(403).json({ error: 'Invalid share token' });
-            }
+    // Check if the file has been shared (publicly accessible)
+    db.get('SELECT file_id FROM share_tokens WHERE file_id = ?', [fileId], (err, shareToken) => {
+        if (err) return res.status(500).json({ error: err.message });
 
+        if (shareToken) {
+            // File has been shared — serve it publicly without auth
             db.get('SELECT * FROM files WHERE id = ?', [fileId], (err, file) => {
                 if (err) return res.status(500).json({ error: err.message });
                 if (!file) return res.status(404).json({ error: 'File not found' });
 
                 const absolutePath = path.resolve(file.path);
-
-                // Set Content-Type with UTF-8 charset for text files
                 let contentType = file.mime_type || 'application/octet-stream';
                 if (contentType.startsWith('text/') ||
                     contentType === 'application/javascript' ||
@@ -117,38 +113,34 @@ router.get('/:id/view', (req, res) => {
                     contentType === 'application/xml') {
                     contentType += '; charset=utf-8';
                 }
-
                 res.setHeader('Content-Type', contentType);
                 res.setHeader('Content-Disposition', 'inline');
                 res.sendFile(absolutePath);
             });
-        });
-    } else {
-        if (!req.session.userId) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
-
-        const userId = req.session.userId;
-        db.get('SELECT * FROM files WHERE id = ? AND user_id = ?', [fileId, userId], (err, file) => {
-            if (err) return res.status(500).json({ error: err.message });
-            if (!file) return res.status(404).json({ error: 'File not found' });
-
-            const absolutePath = path.resolve(file.path);
-
-            // Set Content-Type with UTF-8 charset for text files
-            let contentType = file.mime_type || 'application/octet-stream';
-            if (contentType.startsWith('text/') ||
-                contentType === 'application/javascript' ||
-                contentType === 'application/json' ||
-                contentType === 'application/xml') {
-                contentType += '; charset=utf-8';
+        } else {
+            // Not shared — require login and ownership
+            if (!req.session.userId) {
+                return res.status(401).json({ error: 'Unauthorized' });
             }
+            const userId = req.session.userId;
+            db.get('SELECT * FROM files WHERE id = ? AND user_id = ?', [fileId, userId], (err, file) => {
+                if (err) return res.status(500).json({ error: err.message });
+                if (!file) return res.status(404).json({ error: 'File not found' });
 
-            res.setHeader('Content-Type', contentType);
-            res.setHeader('Content-Disposition', 'inline');
-            res.sendFile(absolutePath);
-        });
-    }
+                const absolutePath = path.resolve(file.path);
+                let contentType = file.mime_type || 'application/octet-stream';
+                if (contentType.startsWith('text/') ||
+                    contentType === 'application/javascript' ||
+                    contentType === 'application/json' ||
+                    contentType === 'application/xml') {
+                    contentType += '; charset=utf-8';
+                }
+                res.setHeader('Content-Type', contentType);
+                res.setHeader('Content-Disposition', 'inline');
+                res.sendFile(absolutePath);
+            });
+        }
+    });
 });
 
 router.post('/:id/share', requireAuth, (req, res) => {
@@ -167,8 +159,9 @@ router.post('/:id/share', requireAuth, (req, res) => {
         db.get('SELECT token FROM share_tokens WHERE file_id = ?', [fileId], (err, existing) => {
             if (err) return res.status(500).json({ error: err.message });
 
+            const shareUrl = `${req.protocol}://${req.get('host')}/api/files/${fileId}/view`;
+
             if (existing) {
-                const shareUrl = `${req.protocol}://${req.get('host')}/api/files/${fileId}/view?token=${existing.token}`;
                 return res.json({ token: existing.token, shareUrl });
             }
 
@@ -177,8 +170,6 @@ router.post('/:id/share', requireAuth, (req, res) => {
 
             db.run('INSERT INTO share_tokens (file_id, token) VALUES (?, ?)', [fileId, token], (err) => {
                 if (err) return res.status(500).json({ error: err.message });
-
-                const shareUrl = `${req.protocol}://${req.get('host')}/api/files/${fileId}/view?token=${token}`;
                 res.json({ token, shareUrl });
             });
         });
